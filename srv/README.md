@@ -9,3 +9,9 @@ You'll see some old docker files - please ignore, those are just for reference.
 What I'll do next:
 - use postgres instead of local JSON files for database
 - update stub with actual air quality dashboard
+
+
+Steps:
+- run all commands in `docker-builds.sh`
+- run `docker compose up -d`
+- check if api service works: `curl http://localhost/api/aca_stations_recent/`
