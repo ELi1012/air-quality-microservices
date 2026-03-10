@@ -1,0 +1,10 @@
+# HOME=~/projects/air_quality/IST VM/srv/images/cron-provider1/
+
+# TODO: run with relevant .env files
+# eg. 0 * * * * cd /path/to/project && npx tsx -r dotenv/config ab_stations/ingest.ts
+# add these to the package.json scripts OR figure out how to make it work with docker
+
+# crontab runs from /root by default
+# use this first: `cd /srv`
+
+0,10,20,30,40,50 * * * * cd /srv && /usr/bin/npm run start > /proc/1/fd/1 2>/proc/1/fd/2

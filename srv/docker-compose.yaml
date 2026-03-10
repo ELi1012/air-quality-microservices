@@ -1,0 +1,47 @@
+services:
+  cron-provider1:
+    image: cron-provider1:latest
+    container_name: cron-provider1
+    restart: always
+    volumes:
+        - "./volumes/station_data:/srv/data"
+  api-provider1:
+    image: api-provider1:latest
+    restart: always
+    depends_on:
+        - cron-provider1
+    expose:
+        - "8080"
+    volumes:
+        - "./volumes/station_data:/srv/data"
+  
+  gateway:
+    image: gateway:latest
+    container_name: gateway
+    restart: always
+    depends_on:
+        - api-provider1
+    environment:
+        # Ensure GATEWAY_TARGET is set to http://api-provider1:8080
+        - API_URL=http://api-provider1:8080 
+
+  nginx:
+      image: nginx:local
+      container_name: nginx
+      restart: always
+      depends_on:
+          - gateway
+      ports:
+          - "80:80/tcp"
+
+  file-cleaner:
+        image: alpine:latest
+        container_name: file-cleaner
+        restart: always
+        volumes:
+            - "./volumes/station_data:/srv/data"
+        entrypoint: |
+            /bin/sh -c "while true; do 
+              cd /srv/data && ls -t ALL_STATIONS*.json | tail -n +4 | xargs -r rm; 
+              sleep 21600; 
+            done"

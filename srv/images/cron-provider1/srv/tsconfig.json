@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": false,
+    "noImplicitAny": false
+  },
+  "include": ["./app.js", "**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "data",
+    "**/archived/*.ts",
+    "**/purpleair/*.ts"
+  ],
+}
