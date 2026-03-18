@@ -1,7 +1,7 @@
 const now = new Date().toISOString();
 console.log(`Cron triggered at: ${now}`);
 
-import { fetch_all_stations } from "./ab_stations/ingest_ab_gov"
+import { fetch_all_stations } from "./stations/ingest_ab_gov"
 import * as fs from 'fs';
 
 const data = { 

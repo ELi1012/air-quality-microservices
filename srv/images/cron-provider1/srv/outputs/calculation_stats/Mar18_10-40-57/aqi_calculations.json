@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-18T15:00:00.000Z",
+  "pollutants_readings": {
+    "no2": 0.016,
+    "so2": null,
+    "pm25": 2.7,
+    "o3": 0.01,
+    "co": null,
+    "h2s": null
+  },
+  "aqis_ranked": [
+    [
+      "no2",
+      1.79208
+    ],
+    [
+      "o3",
+      1.49505
+    ],
+    [
+      "pm25",
+      1
+    ],
+    [
+      "so2",
+      null
+    ],
+    [
+      "co",
+      null
+    ],
+    [
+      "h2s",
+      null
+    ]
+  ]
+}

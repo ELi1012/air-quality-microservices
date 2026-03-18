@@ -1,0 +1,24 @@
+{
+  "timestamps": [
+    "2026-03-18T18:00:00.000Z",
+    "2026-03-18T17:00:00.000Z"
+  ],
+  "extracted_pollutants": [
+    {
+      "o3_ppm": 0.036,
+      "no2_ppm": null,
+      "pm25": 0.8
+    },
+    {
+      "o3_ppm": 0.035,
+      "no2_ppm": null,
+      "pm25": 1.1
+    }
+  ],
+  "pollutant_averages": {
+    "o3_ppm": 0.035500000000000004,
+    "pm25": 0.9500000000000001
+  },
+  "aqhi_raw": null,
+  "insufficient_data": true
+}

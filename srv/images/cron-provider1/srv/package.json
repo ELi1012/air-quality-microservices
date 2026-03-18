@@ -7,23 +7,23 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "dev": "node -r ts-node/register app.js",
-    "pa-sensor-readings": "npx ts-node purpleair/ingest.ts",
-    "pa-metadata": "npx ts-node purpleair/ingest_metadata.ts",
-    "aca-station-readings": "npx ts-node ab_stations/ingest.ts",
-    "ingest:ab_gov": "npx ts-node ab_stations/ingest_ab_gov.ts",
-    "ingest:eccc": "npx ts-node ab_stations/ingest_eccc.ts",
-    "test:manual-aqhi": "npx ts-node ab_stations/manual_aqhi.ts"
+    "db-setup": "npx tsx -r dotenv/config ./db/db_setup.ts",
+    "station-sync": "npx tsx -r dotenv/config ./jobs/sync-stations.ts",
+    "pa-sync": "npx tsx -r dotenv/config ./jobs/sync-purpleair.ts",
+    "sync-station-metadata": "npx tsx -r dotenv/config ./jobs/sync-metadata-stations.ts",
+    "sync-purpleair-metadata": "npx tsx -r dotenv/config ./jobs/sync-metadata-purpleair.ts"
+
   },
   "dependencies": {
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dotenv": "^17.3.1",
     "fast-xml-parser": "^5.3.3",
+    "lodash": "^4.17.23",
     "p-queue": "^9.0.1",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "pg-format": "^1.0.4"
   },
-  "keywords": [
-    "purpleair"
-  ],
   "devDependencies": {
     "@types/node": "^24.10.0",
     "@types/pg": "^8.16.0",

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-17T21:40:48-06:00",
+  "final_aqhi": 2,
+  "use_aqi_instead": false,
+  "determining_pollutant": "o3",
+  "raw_aqhi": 2.0161703185719,
+  "raw_aqi": 1.9901
+}
