@@ -8,8 +8,9 @@ RUN set -eux; \
     apk --no-cache add \
         nodejs \
         npm; \
-    npm install
+    npm install; \
+    npm run build;
 
 EXPOSE 8080/tcp
 
-CMD ["node", "app.js"]
+CMD ["npm", "run", "start"]

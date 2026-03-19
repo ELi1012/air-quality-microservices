@@ -12,8 +12,9 @@ RUN set -eux; \
         npm; \
     npm install;
 
+RUN ls -l ./entrypoint.sh
+
 RUN npm run build
 
-# should i add a package.json for the postgres client?
+ENTRYPOINT ["./entrypoint.sh"]
 
-CMD ["crond", "-f", "-d", "8"]

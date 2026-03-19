@@ -1,1 +1,8 @@
 node_modules
+srv/azure/
+dist
+**/logs
+outputs
+db/commands.md
+stations/archived
+srv/db/simulate_load.ts

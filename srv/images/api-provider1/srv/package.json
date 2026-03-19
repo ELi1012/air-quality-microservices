@@ -1,14 +1,23 @@
 {
-  "name": "app",
+  "name": "api-service",
   "version": "1.0.0",
-  "description": "Air Quality",
+  "description": "Serves air quality data (PurpleAir PM2.5 and FEM stations)",
   "main": "app.js",
-  "type": "module",
-  "author": "Cloud Applications",
-  "license": "MIT",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node -r dotenv/config dist/app.js",
+    "dev": "npx tsx -r dotenv/config ./app.js",
+    "db:stations": "npx tsx -r dotenv/config ./db/station_access.ts",
+    "db:sensors": "npx tsx -r dotenv/config ./db/pa_access.ts"
+  },
   "dependencies": {
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "mongodb": "^6.7.0",
-    "xml2js": "^0.6.2"
+    "pg": "^8.20.0",
+    "tsc": "^2.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
   }
 }

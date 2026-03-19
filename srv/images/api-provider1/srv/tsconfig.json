@@ -14,13 +14,5 @@
   "exclude": [
     "node_modules",
     "dist",
-    "data",
-    "**/azure/*.ts",
-    "**/azure/*.js",
-    "**/crons/",
-    "**/logs/",
-    "**/outputs/",
-    "**/archived/*.ts",
-    "**/purpleair/*.ts"
   ],
 }

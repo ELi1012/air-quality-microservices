@@ -1,3 +1,0 @@
-docker build --ssh default --progress plain -t gateway:latest .
-
-http://api-provider1/api/ACA_station_AQHI

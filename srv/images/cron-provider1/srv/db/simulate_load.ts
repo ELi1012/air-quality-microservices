@@ -1,6 +1,3 @@
-import { getLatestReadings } from "./pa_access";
-import { getLatestStationMeasurements } from "./station_access";
-
 import { getMicrosensors } from "../azure/fetch_sensors";
 import { getStations } from "../azure/fetch_stations";
 
@@ -73,19 +70,6 @@ async function updateDatabases() {
     }
 }
 
-async function getFromDatabases() {
-    try {
-        await Promise.all([
-            getLatestReadings(),
-            getLatestStationMeasurements()
-        ]);
-    } catch (err) {
-        console.error(`Couldn't fetch from databases (pg): `, err)
-    }
-}
-
-
-
 
 
 // MAKE SURE CRONJOB IS RUNNING BEFORE ACCESSING FROM DB
@@ -105,8 +89,9 @@ async function getFromDatabases() {
     
     // --- fetch from database
     const [dbSensors, dbStations] = await Promise.all([
-        getLatestReadings(),
-        getLatestStationMeasurements()
+        [], []
+        // getLatestReadings(),
+        // getLatestStationMeasurements()
     ]);
 
     console.log(`Took ${(Date.now() - now)/1000} s to finish all`)

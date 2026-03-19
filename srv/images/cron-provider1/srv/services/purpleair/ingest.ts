@@ -1,7 +1,7 @@
 import { URLSearchParams } from "url";
 import { _read_data, _write_data } from "../../utils"
 
-import { pool } from "../postgres/pool"
+import { pool } from "../../db/pools"
 import format from "pg-format"
 
 // const client = new Client({

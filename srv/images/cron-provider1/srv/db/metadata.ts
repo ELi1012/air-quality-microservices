@@ -30,8 +30,6 @@ export async function updatePurpleairMetadata() {
         rows
     );
 
-    console.log(query)
-
     const now = Date.now();
     try {
         await pool.query(query);
