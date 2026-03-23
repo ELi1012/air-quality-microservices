@@ -14,7 +14,7 @@ RUN npm install
 
 COPY srv/ .
 
-RUN tsc
+RUN npm run build
 
 EXPOSE 8080/tcp
 
