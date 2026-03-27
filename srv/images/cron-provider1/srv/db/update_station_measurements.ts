@@ -105,7 +105,6 @@ export async function updateStationMeasurements() {
     // fetch from AB gov API
     let apiStart = Date.now();
     const stationsRaw = await fetch_all_stations();
-    // const stationsRaw: StationRecord[] = _read_data('./outputs/stations_azure.json');
     const stationsFiltered: StationRecord[] = Object.values(stationsRaw).filter(s => s !== null);
     const stations: StationRecord[] = await removeNonexistentStations(stationsFiltered);
 
