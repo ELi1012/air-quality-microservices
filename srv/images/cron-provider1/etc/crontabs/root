@@ -13,4 +13,8 @@
 20,30,40 * * * * cd /srv && /usr/bin/npm run station-sync > /proc/1/fd/1 2>/proc/1/fd/2
 
 
-# TODO: sync metadata
+# sync metadata
+
+0 0 1 * * cd /srv && /usr/bin/npm run sync-purpleair-metadata > /proc/1/fd/1 2>/proc/1/fd/2
+5 0 1 * * cd /srv && /usr/bin/npm run sync-station-metadata > /proc/1/fd/1 2>/proc/1/fd/2
+

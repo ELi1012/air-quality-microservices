@@ -1,5 +1,7 @@
 /**
- * Create tables.
+ * RUN FIRST WHEN STARTING CRON PROVIDER INSTANCE.
+ * 
+ * Creates tables.
  * 
  */
 
@@ -125,5 +127,4 @@ async function dropAllTables() {
     await updatePurpleairMetadata();
     await updateStationMetadata();
 
-    await pool.end();
 })();
