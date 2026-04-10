@@ -43,6 +43,12 @@ export function _write_data(filepath, data, indentation=2) {
 }
 
 
+// for logging
+export function getCurrentTimeISO() {
+  return new Date(Date.now()).toISOString();
+}
+
+
 export function formatToLocalISO(date: Date) {
   // 'XXX' in the pattern prints the timezone offset (e.g., -06:00 or -07:00)
   // 'America/Edmonton' ensures it checks the AB rules for that specific date
