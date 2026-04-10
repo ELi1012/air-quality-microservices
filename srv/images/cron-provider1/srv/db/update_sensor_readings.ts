@@ -9,8 +9,7 @@ import {_read_data, _write_data, getCurrentTimeISO } from "../utils"
 import { SENSOR_READINGS } from "./table_names"
 
 export async function updateReadings() {
-    // const res = await get_purpleair_sensor_data();
-    const res = _read_data('./outputs/compare/get_purpleair_sensor_data.json');
+    const res = await get_purpleair_sensor_data();
 
     if (res === undefined) return;
 
