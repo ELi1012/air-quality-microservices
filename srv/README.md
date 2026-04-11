@@ -1,21 +1,15 @@
 Contains the following:
 - api service to serve air quality station data
-- cron job to pull:
+- cron jobs to pull:
     1. station data from government API
     2. PM2.5 sensor data from PurpleAir
+    3. sensor metadata fromm PurpleAir (monthly)
+    4. station metadata from government API (monthly)
 - gateway: contains react app
 
-Please note: this is a temporary implementation.
-Main objective is to move off Azure ASAP.
-You'll see some old docker files - please ignore, those are just for reference.
-
-Done:
-- postgres database implementation
-- containers can talk to each other
 
 What I'll do next:
 - prune postgres database w/ extra cronjobs
-- methods to update table metadata (stations, sensors)
 
 
 Steps:
@@ -35,6 +29,9 @@ The API and cron providers are responsible for two data sources:
 1. FEM Stations: aka stations, ACA stations
 2. PurpleAir PM2.5 Sensors: aka sensors, pa sensors
 
+The postgres db is effectively a 3-hour cache for real-time air quality data.
+If it needs to be pruned, keep only the last 3 hours.
+
 
 ### FEM Stations
 
@@ -44,8 +41,7 @@ hence the cronjob updates at minutes 20, 30, and 40.
 
 Eg. The station measurements for 1:00 pm are usually available at 1:20, 1:30, or 1:40.
 
-New stations won't be added often, so the future cronjob
-will probably check for new stations every month.
+New stations are checked for every month to be added to the database.
 
 
 ### PurpleAir PM2.5 Sensors
@@ -55,5 +51,5 @@ Unlike stations, PA sensors are quick to update (almost to the minute).
 
 However, they use a private API so each pull does cost some money.
 
-New sensors will be checked every week by a cronjob (currently under construction.)
+New sensors are checked for every month to be added to the database.
 
