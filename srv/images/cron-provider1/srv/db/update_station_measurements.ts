@@ -4,11 +4,30 @@ import format from "pg-format"
 import { PollutantKey, StationRecord } from "../types/contracts"
 import { fetch_all_stations } from "../services/stations/ingest_ab_gov";
 
-import {_read_data, _write_data, getFilesFromDir} from "../utils"
+import {_read_data, _write_data } from "../utils"
 import { STATION_MEASUREMENTS, STATION_AQI_TABLE } from "./table_names"
 
 
 async function insertStationMeasurementAll(stations: StationRecord[]) {
+    let stationsToInsert = stations;
+
+    // --- COMPARE TO CURRENTLY EXISTING STATIONS IN `stations` TABLE
+    const uniqueStationKeysFromAPI = [...new Set(stations.map(s => s.station_key))];
+
+    // compare ids from API to ids currently in table
+    const { rows: existingRows } = await pool.query('SELECT station_key FROM stations;');
+    const existingStationKeys = new Set(existingRows.map(r => r.station_key));
+    const missingIds = uniqueStationKeysFromAPI.filter(id => !existingStationKeys.has(id));
+
+    if (missingIds.length > 0) {
+        console.warn(`⚠️ Found ${missingIds.length} new stations in API data not present in DB:`, missingIds);
+        console.log(`Happens if monthly station cronjob hasn't updated stations table. Run the cronjob manually to remove this message.`);
+        
+        // filter out stations not in table
+        // otherwise causes a foreign key constraint violation
+        stationsToInsert = stationsToInsert.filter(s => existingStationKeys.has(s.station_key));
+    }
+
     // flattens rows for insertion
     const formatForInsertion = (station: StationRecord) => {
         const { station_key, timestamp, raw_timestamp, aqhi, aqi, manual_aqhi, extraInfo } = station;
@@ -19,7 +38,7 @@ async function insertStationMeasurementAll(stations: StationRecord[]) {
     }
 
     // MUST BE LISTED IN SAME ORDER AS INSERT QUERY
-    const measurementRows: any[][] = stations.map(s => formatForInsertion(s));
+    const measurementRows: any[][] = stationsToInsert.map(s => formatForInsertion(s));
     
     const sqlQuery = format(
         `INSERT INTO ${STATION_MEASUREMENTS} (
@@ -103,37 +122,13 @@ async function removeNonexistentStations(stations: StationRecord[]): Promise<Sta
 
 export async function updateStationMeasurements() {
     // fetch from AB gov API
-    let apiStart = Date.now();
     const stationsRaw = await fetch_all_stations();
+
     const stationsFiltered: StationRecord[] = Object.values(stationsRaw).filter(s => s !== null);
     const stations: StationRecord[] = await removeNonexistentStations(stationsFiltered);
 
-    // const apiDuration = Date.now() - apiStart;
-    // console.log(`Took ${(apiDuration/1000)} s (${(apiDuration/1000)/60} minutes) to fetch station data`)
-
+    console.log('Inserting stations into db...');
     await insertStationMeasurementAll(stations);
     await insertAQIsAll(stations);
-}
-
-
-// DEBUG ONLY
-// updates stations from local JSON files
-async function updateStationsFromVolume() {
-    // fetch all stations whose readings are older than an hour
-    const measurements = getFilesFromDir('../../../volumes/station_data');
-    console.log(`${measurements.length} measurements loaded`);
-
-    for (const hourlyMeasurement of measurements) {
-
-        // const hourlyMeasurement = sample_measurements;
-        console.log(`update database for ${hourlyMeasurement.timestamp}`)
-    
-        // const stationsToUpdate: any = [];
-        const stationsToUpdate: any = Object.keys(hourlyMeasurement.readings);
-        const stations = stationsToUpdate.map(key => hourlyMeasurement.readings[key]).filter(s => s !== null);
-    
-        await insertStationMeasurementAll(stations);
-
-    }
 }
 
