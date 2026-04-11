@@ -35,7 +35,7 @@ export async function updateReadings() {
         // happens if sensors are in purpleair group but not in table
         // this is ok. just manually run the monthly cronjob that updates the purpleair group to make this disappear
         console.warn(`⚠️ Found ${missingIds.length} new sensors in API data not present in DB:`, missingIds);
-        console.log(`Happens if database was recently set up. If not, manually run the monthly cronjob that updates purpleair metadata to get rid of this message.`);
+        console.log(`Happens if monthly purpleair cronjob hasn't updated sensors table. Run the cronjob manually to remove this message.`);
         
         // filter out sensors not in table
         // otherwise causes a foreign key constraint violation
