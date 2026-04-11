@@ -12,18 +12,10 @@
 
 
 import PQueue from 'p-queue';
-// import { Client } from 'pg';
 
-import { _read_data, _write_data, formatToLocalISO, parseNumber } from "../../utils";
+import { _read_data, _write_data, parseNumber, getCurrentTimeISO } from "../../utils";
 import { PollutantKey, StationRecord } from '../../types/contracts';
 import { execute_AQHI_calculation_flow } from "./manual_aqhi"
-
-// const client = new Client({
-//   connectionString: process?.env?.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/air_quality_data"
-// });
-
-// const STATION_TABLE = process?.env?.DB_NAME || 'stations';
-
 
 
 // the parameters we want to report for each station
@@ -448,8 +440,10 @@ function processRawStationData(
 
 type AlbertaStations = Record<string, StationRecord|null>;
 async function fetch_all_stations(): Promise<AlbertaStations> {
+    // takes a few minutes
+    console.log(`Begin processing stations at ${getCurrentTimeISO()}`);
+
     const stationKeys = await fetch_station_keys();
-    // const stationKeys = [216];
 
     // maps station readings to their key
     const stationMap: Record<number, Record<any, any>|null> = Object.fromEntries(stationKeys.map(key => [key, null]));
@@ -472,8 +466,6 @@ async function fetch_all_stations(): Promise<AlbertaStations> {
                 const record = appendManualAQHI(dataPast3Hours)
                 stationMap[key] = record;
 
-                console.log(`Processed station key ${key}`);
-
             } catch (err: any) {
                 console.warn(`Failed for station key ${key}: ${err.message}`);
             }
@@ -481,6 +473,7 @@ async function fetch_all_stations(): Promise<AlbertaStations> {
     }
 
     await queue.onIdle();
+    console.log(`Finished processing stations at ${getCurrentTimeISO()}`);
 
     return stationMap as AlbertaStations;
 }
@@ -512,3 +505,21 @@ function appendManualAQHI(
 export {
     fetch_all_stations
 }
+
+
+(async () => {
+    // historical data from the past year
+
+    const key = 140;
+
+    // const raw = await fetch_ACA_station_data(
+    //     key, API_PARAMS, 24*365
+    // );
+    // const raw = _read_data('./raw_140.json');
+    // const dataPast3Hours = processRawStationData(raw);
+    // await _write_data('./processed-140.json', dataPast3Hours)
+    // const record = appendManualAQHI(dataPast3Hours)
+
+    // console.log(`Processed station key ${key}`);
+})
+// ();

@@ -142,19 +142,6 @@ function calculate_station_AQI(
 
     // check if data is stale
     const timestamp = stationRecord.timestamp;
-
-    // if older than an hour, report timestamp of last valid AQI set
-    // const dataIsStale = (timestamp: Timestamp) => {
-    //     const threshold = reference_timestamp - (1 * 60 * 60 * 1000);
-    //     const readingTime = new Date(timestamp).getTime();
-    //     return readingTime < threshold
-    // }
-
-    // if (dataIsStale(timestamp)) {
-    //     console.log("Warning: AQI data is older than an hour");
-    //     return null;
-    // }
-
     const pollutantData = stationRecord.readings;
     
     // apply AQI calculation
@@ -249,23 +236,9 @@ const aqhiCanBeCalculated = (
         };
     }
 
-    // if latest reading was over an hour ago, reject
-    // UPDATE: do not reject readings older than an hour (3 hr average)
-    // const now = reference_timestamp;
-    // const oneHourInMs = 60 * 60 * 1000;
-    // const oneHourAgo = now - oneHourInMs;
-
-    // const noneWithinLastHour = new Date(sorted_timestamps[0]).getTime() < oneHourAgo;
-
-    // if (noneWithinLastHour) {
-    //     console.log("⚠️ Data is stale. No readings received in the last 60 minutes.");
-    //     return false;
-    // }
-
     if (sorted_timestamps.length < 2) {
         const missing = 3 - sorted_timestamps.length;
         reasonIfFalse = `Cannot provide 3-hour average with ${missing} hours of missing station data`
-        console.log(`⚠️ ${reasonIfFalse}`);
         return {
             canCalculate: false,
             reasonIfFalse
@@ -281,7 +254,6 @@ const aqhiCanBeCalculated = (
     if (valid_datapoints.length < 2) {
         const missing = 3 - valid_datapoints.length;
         reasonIfFalse = `Cannot provide 3-hour average with ${missing} hours of invalid pollutant data`
-        console.log(`⚠️ ${reasonIfFalse}`);
         return {
             canCalculate: false,
             reasonIfFalse
@@ -442,7 +414,6 @@ export function execute_AQHI_calculation_flow({
 
     // setup
     const reference_timestamp = normalizeTimestamp(asOf);
-    console.log(`-------- start: ${formatToLocalISO(new Date(reference_timestamp))}`)
     if (save_calculation_stats) fs.mkdirSync(`./outputs/calculation_stats/${getFolderName(reference_timestamp)}/`, { recursive: true });
     const extraInfo = {};
 
@@ -494,7 +465,7 @@ export function execute_AQHI_calculation_flow({
         // }
         
     } else {
-        console.log(`Cannot calculate AQI: Could not find most recent timestamps wrt ${new Date(reference_timestamp).toISOString()}`)
+        // console.log(`Cannot calculate AQI: Could not find most recent timestamps wrt ${new Date(reference_timestamp).toISOString()}`)
     }
     
 
