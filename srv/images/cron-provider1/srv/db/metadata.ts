@@ -147,5 +147,6 @@ export async function updateStationMetadata() {
         throw err
     }
 
+    console.log('Updated station metadata');
 }
 
