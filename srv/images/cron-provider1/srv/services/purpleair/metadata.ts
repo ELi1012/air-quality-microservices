@@ -21,7 +21,7 @@
 
 import PQueue from 'p-queue';               // handles multiple API requests while respecting rate limits
 import { fetch_from_url, validateEnvs } from "../utils"   // utility functions
-import { LOCATION_TYPE_OUTSIDE, EDMONTON_BBOX_COORDINATES, METADATA_FIELDS } from "./consts"
+import { LOCATION_TYPE_OUTSIDE, ALBERTA_BBOX_COORDINATES, EDMONTON_BBOX_COORDINATES, METADATA_FIELDS } from "./consts"
 
 import { _read_data, _write_data } from "../../utils"   // for local testing
 
@@ -85,7 +85,6 @@ export async function getCurrentMembers(): Promise<MembersMetadataResponse> {
 
 
 // sensors not within our cached group
-// TODO: change to alberta, not edmonton
 async function getSensors(params: Record<string, any>) {
     const baseUrl = `https://api.purpleair.com/v1/sensors`;
 
@@ -155,7 +154,7 @@ async function fetchAllSensorsAlberta() {
         fields: 'last_seen',    // in seconds
         max_age: ONE_MONTH,
         location_type: LOCATION_TYPE_OUTSIDE,
-        ...(EDMONTON_BBOX_COORDINATES || {})
+        ...(ALBERTA_BBOX_COORDINATES || {})
     }
 
     return await getSensors(params);
@@ -257,8 +256,6 @@ export async function addNewMembers(): Promise<SensorAddingResponse[]> {
 
     await queue.onIdle();
 
-    // _write_data('./added-sensors.json', addedSensors);
-
     // calling function needs to update database w/ new sensors
     return addedSensors as SensorAddingResponse[];
 }
@@ -339,3 +336,18 @@ async function removeMembers(){//(sensor_indexes: number[]) {
     await queue.onIdle();
 }
 
+
+// (async () => {
+//     // const allSensorsRaw = _read_data('./outputs/all-sensors.json');
+//     // const allSensors = allSensorsRaw.data.map(row => row[0]);
+
+//     // const currentMembersRaw = _read_data('./outputs/pa-2772-group.json');
+//     // const currentMembers = currentMembersRaw.members.map(row => row.sensor_index);
+
+//     // console.log(allSensors.filter(idx => !currentMembers.includes(idx)));
+
+//     // const newMembers = await addNewMembers();
+//     // _write_data('./outputs/newMembers.json', newMembers)
+
+// })
+// ();
