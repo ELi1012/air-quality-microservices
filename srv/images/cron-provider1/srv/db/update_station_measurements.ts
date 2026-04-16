@@ -41,6 +41,8 @@ async function insertStationMeasurementAll(stations: StationRecord[]) {
     const measurementRows: any[][] = stationsToInsert.map(s => formatForInsertion(s));
     
     const sqlQuery = format(
+        // exclude manual_aqhi and extraInfo if row already exists
+        // manual_aqhi is calculated wrt time of fetching, not the actual station timestamp
         `INSERT INTO ${STATION_MEASUREMENTS} (
             station_key, timestamp, raw_timestamp, no2, so2, pm25, o3, co, h2s, aqhi, aqi, manual_aqhi, extraInfo
         )
@@ -55,8 +57,6 @@ async function insertStationMeasurementAll(stations: StationRecord[]) {
             h2s     = EXCLUDED.h2s,
             aqhi    = EXCLUDED.aqhi,
             aqi     = EXCLUDED.aqi,
-            manual_aqhi = EXCLUDED.manual_aqhi,
-            extraInfo = EXCLUDED.extraInfo,
             last_updated = CURRENT_TIMESTAMP
         ;`,
         measurementRows
