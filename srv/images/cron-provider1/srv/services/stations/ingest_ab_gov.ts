@@ -480,18 +480,26 @@ async function fetch_all_stations(): Promise<AlbertaStations> {
 
 
 /**
+ * Calculates AQHI with respect to the most recent record of the 3 provided.
  * Requires readings from previous 3 hours to calculate the AQHI
  */
 function appendManualAQHI(
     recordsByTimestamp: Record<string, StationRecord>
 ): StationRecord {
-    const { aqhi, aqis_ranked, extraInfo } = execute_AQHI_calculation_flow({readingsByTimestamp: recordsByTimestamp})
 
-    const timestamps = Object.keys(recordsByTimestamp).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+    // find most recent record
+    const timestamps = Object.keys(recordsByTimestamp).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     if (timestamps.length === 0) return null;   // no data from the past 3 hours
 
-    // most recent record
-    let recordNow = recordsByTimestamp[timestamps[0]];
+    const reference_timestamp = timestamps[0];                  // use this to calculate AQHI
+    let recordNow = recordsByTimestamp[reference_timestamp];    // return this
+
+    // calculate AQHI
+    const { aqhi, aqis_ranked, extraInfo } = execute_AQHI_calculation_flow({
+        readingsByTimestamp: recordsByTimestamp,
+        asOf: reference_timestamp
+    });
+
 
     return {
         ...recordNow,
@@ -506,20 +514,3 @@ export {
     fetch_all_stations
 }
 
-
-(async () => {
-    // historical data from the past year
-
-    const key = 140;
-
-    // const raw = await fetch_ACA_station_data(
-    //     key, API_PARAMS, 24*365
-    // );
-    // const raw = _read_data('./raw_140.json');
-    // const dataPast3Hours = processRawStationData(raw);
-    // await _write_data('./processed-140.json', dataPast3Hours)
-    // const record = appendManualAQHI(dataPast3Hours)
-
-    // console.log(`Processed station key ${key}`);
-})
-// ();
