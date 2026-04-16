@@ -399,9 +399,6 @@ function use_AQI_instead({
 }
 
 
-// if no reference timestamp provided, calculates AQHI
-// as of right now.
-// if asOf is provided, this becomes a historical analysis
 export function execute_AQHI_calculation_flow({
     readingsByTimestamp,
     asOf
@@ -476,9 +473,9 @@ export function execute_AQHI_calculation_flow({
 
 
     const use_aqi = use_AQI_instead({
-            determining_pollutant,
-            highest_aqi: raw_aqi,
-            aqhi_given: aqhi
+        determining_pollutant,
+        highest_aqi: raw_aqi,
+        aqhi_given: aqhi
     });
 
     if (use_aqi) final_aqhi = Math.round(raw_aqi);
