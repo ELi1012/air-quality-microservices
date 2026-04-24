@@ -16,6 +16,7 @@ import PQueue from 'p-queue';
 import { _read_data, _write_data, parseNumber, getCurrentTimeISO } from "../../utils";
 import { PollutantKey, StationRecord } from '../../types/contracts';
 import { execute_AQHI_calculation_flow } from "./manual_aqhi"
+import { STATION_TABLE } from '../../db/table_names';
 
 
 // the parameters we want to report for each station
@@ -109,8 +110,12 @@ const TIME_WINDOW_HOURS = 3;   // readings older than this are rejected
  * 
  */
 async function fetch_station_keys(): Promise<number[]> {
+    const isNotAqhiStation = (description: string) => {
+        const desc = description.toLowerCase();
+        return desc.includes("not aqhi station") || desc.includes("not an aqhi station");
+    }
 
-    const url = `https://data.environment.alberta.ca/EDWServices/aqhi/odata/Stations?$format=json&$select=StationKey,Name&$orderby=StationKey`;
+    const url = `https://data.environment.alberta.ca/EDWServices/aqhi/odata/Stations?$format=json&$select=StationKey,Name,Description&$orderby=StationKey`;
     try {
         const response = await fetch(url);
 
@@ -120,12 +125,17 @@ async function fetch_station_keys(): Promise<number[]> {
 
         const data = await response.json();
         const stationKeys: number[] = data.value
-            .map(({ StationKey, Name }) => {
+            .map(({ StationKey, Name, Description }) => {
                 const key = parseNumber(StationKey);
                 if (key === null || key <= 0) {
                     console.log(`Station ${Name} filtered out - has non numerical key: ${StationKey}`);
                     return null;
                 }
+
+                // check if station is an AQHI station
+                if (Description === undefined) console.warn(`Description not returned for station ${key} - cannot filter out non-AQHI stations`);
+                else if (isNotAqhiStation(Description)) return null;
+
                 return key;
             })
             .filter(key => key !== null);
