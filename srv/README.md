@@ -1,4 +1,10 @@
-Contains the following:
+**THIS IS THE LEGACY VERSION OF LITTLELUNGS**
+> The Alberta-only version of the LittleLungs project has been discontinued and is no longer maintained. The legacy version will be archived under the `alberta-legacy` branch.
+
+
+# About the Repo
+
+Contains the following services:
 - api service to serve air quality station data
 - cron jobs to pull:
     1. station data from government API
@@ -8,15 +14,10 @@ Contains the following:
 - gateway: contains react app
 
 
-What I'll do next:
-- prune postgres database w/ extra cronjobs
-
-
 Steps:
 - run all commands in `docker-builds.sh`
 - run `docker compose up -d`
 - check if api service works: `curl http://localhost/api/purpleair`
-
 
 
 Note: the `docker-compose.yaml` file is omitted from the repo
@@ -26,10 +27,10 @@ because it contains secrets. Please email if you need it.
 # About the Data
 
 The API and cron providers are responsible for two data sources:
-1. FEM Stations: aka stations, ACA stations
-2. PurpleAir PM2.5 Sensors: aka sensors, pa sensors
+1. **FEM Stations**: aka stations, ACA stations
+2. **PurpleAir PM2.5 Sensors**: aka sensors, pa sensors
 
-The postgres db is effectively a 3-hour cache for real-time air quality data.
+The postgres db is effectively a **3-hour cache** for real-time air quality data.
 If it needs to be pruned, keep only the last 3 hours.
 
 
