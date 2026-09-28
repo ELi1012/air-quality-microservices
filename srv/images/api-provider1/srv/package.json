@@ -7,11 +7,11 @@
     "build": "npx tsc",
     "start": "node -r dotenv/config dist/app.js",
     "dev": "npx tsx -r dotenv/config ./app.js",
-    "db:stations": "npx tsx -r dotenv/config ./db/station_access.ts",
+    "db:regions": "npx tsx -r dotenv/config ./db/regions.ts",
     "db:sensors": "npx tsx -r dotenv/config ./db/pa_access.ts"
   },
   "dependencies": {
-    "dotenv": "^17.3.1",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.20.0"
   },
