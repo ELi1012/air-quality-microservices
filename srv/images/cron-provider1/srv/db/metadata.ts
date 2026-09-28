@@ -2,8 +2,8 @@
  * To update metadata of PurpleAir sensors and FEM stations.
  * 
  * To check monthly:
- * - new registered sensor indexes in Alberta
- * - new stations
+ * - new registered sensor indexes in Canada
+ * - changes to ECCC regions
  * 
  * Note:
  * - If a sensor is relocated (ie. lat/lon changes),
@@ -20,13 +20,10 @@ import { pool } from "./pools"
 import format from "pg-format"
 
 import { addNewMembers, type SensorAddingResponse, getCurrentMembers, type MembersMetadataResponse } from "../services/purpleair/metadata"
-import { fetchAllStations, fetchStationMetadata } from "../services/stations/stations"
 
-import {_read_data, _write_data, getFilesFromDir} from "../utils"
+import { SENSOR_TABLE, REGION_TABLE } from "./table_names"
 
-import { STATION_TABLE, SENSOR_TABLE } from "./table_names"
-
-
+import { getGeoMetRegionalMetadata } from "../services/regions/metadataSync"
 
 
 
@@ -116,25 +113,26 @@ export async function addNewPurpleairMembers() {
 
 
 
-// run this every month (FEM station)
-export async function updateStationMetadata() {
-    const stations_metadata = await fetchAllStations();
+export async function updateRegionMetadata() {
+    const metadata = await getGeoMetRegionalMetadata();
 
-    const values = stations_metadata.map(s => [
-        s.StationKey,
-        s.Name,
-        s.Latitude,
-        s.Longitude
+    const values = metadata.map(s => [
+        s.id,
+        s.name,
+        s.lat,
+        s.lon,
+        s['url_msc-datamart_observation']
     ]);
 
     const query = format(
-        `INSERT INTO ${STATION_TABLE} (station_key, name, lat, lon)
+        `INSERT INTO ${REGION_TABLE} (id, name, lat, lon, datamart_link)
         VALUES %L
-        ON CONFLICT (station_key) 
+        ON CONFLICT (id) 
         DO UPDATE SET 
             name = EXCLUDED.name, 
             lat = EXCLUDED.lat, 
             lon = EXCLUDED.lon,
+            datamart_link = EXCLUDED.datamart_link,
             last_updated = NOW()`,
         
         values
@@ -143,10 +141,10 @@ export async function updateStationMetadata() {
     try {
         await pool.query(query)
     } catch (err) {
-        console.error(`Could not update station metadata: `, err);
+        console.error(`Could not update ECCC region metadata: `, err);
         throw err
     }
 
-    console.log('Updated station metadata');
+    console.log('Updated region metadata');
 }
 

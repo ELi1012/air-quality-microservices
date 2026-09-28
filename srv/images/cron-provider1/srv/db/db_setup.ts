@@ -6,67 +6,70 @@
  */
 
 import { pool } from "./pools"
-import { updatePurpleairMetadata } from "../db/metadata";
-import { updateStationMetadata } from "../db/metadata"
+import { updatePurpleairMetadata, updateRegionMetadata } from "../db/metadata";
+
 
 import {
-    STATION_TABLE,
-    STATION_MEASUREMENTS,
-    STATION_AQI_TABLE,
+    ECCC_AQHI_SCHEMA,
+    REGION_TABLE,
+    REGION_READINGS,
+    STATION_READINGS,
+    DATAMART_AQHI_READINGS,
 
     SENSOR_TABLE,
     SENSOR_READINGS
 } from "./table_names"
 
 
-const tablesQuery = `
-    -- STATIONS
-    CREATE TABLE IF NOT EXISTS ${STATION_TABLE} (
-        station_key INTEGER PRIMARY KEY,
+
+const regionTablesQuery = `
+    -- REGIONS
+    CREATE SCHEMA IF NOT EXISTS ${ECCC_AQHI_SCHEMA};
+
+    CREATE TABLE IF NOT EXISTS ${REGION_TABLE} (
+        id TEXT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         lat DECIMAL(10,7) NOT NULL,
         lon DECIMAL(10,7) NOT NULL,
+        datamart_link TEXT,
         last_updated TIMESTAMPTZ DEFAULT NOW()
     );
 
-    CREATE TABLE IF NOT EXISTS ${STATION_MEASUREMENTS} (
-        station_key INT,
+    CREATE TABLE IF NOT EXISTS ${REGION_READINGS} (
+        region_id TEXT,
         timestamp TIMESTAMPTZ NOT NULL,
-        raw_timestamp TEXT NOT NULL,
+        aqhi DECIMAL(4, 2),
         last_updated TIMESTAMPTZ DEFAULT NOW(),
-        
-        -- Pollutant readings
-        no2 REAL,
-        so2 REAL,
-        pm25 REAL,
-        o3 REAL,
-        co REAL,
-        h2s REAL,
-        
-        -- AQI/AQHI values
-        aqhi SMALLINT,
-        aqi SMALLINT,
-        manual_aqhi SMALLINT,
 
-        extraInfo JSONB,
-        
-        -- Composite Primary Key
-        PRIMARY KEY (station_key, timestamp),
-        FOREIGN KEY (station_key) REFERENCES stations(station_key) ON DELETE CASCADE
+        PRIMARY KEY (region_id, timestamp),
+        FOREIGN KEY (region_id) REFERENCES ${REGION_TABLE}(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE IF NOT EXISTS ${STATION_AQI_TABLE} (
-        station_key INT NOT NULL,
+    CREATE TABLE IF NOT EXISTS ${STATION_READINGS} (
+        region_id TEXT,
         timestamp TIMESTAMPTZ NOT NULL,
-        pollutant TEXT NOT NULL,
-        value REAL,
+        aqhi DECIMAL(4, 2),
+        naps_id TEXT,
+        name TEXT,
         last_updated TIMESTAMPTZ DEFAULT NOW(),
-        PRIMARY KEY (station_key, timestamp, pollutant),
-        FOREIGN KEY (station_key, timestamp) REFERENCES station_measurements(station_key, timestamp) ON DELETE CASCADE
+
+        PRIMARY KEY (region_id, timestamp, naps_id),
+        FOREIGN KEY (region_id) REFERENCES ${REGION_TABLE}(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS ${DATAMART_AQHI_READINGS} (
+        region_id TEXT,
+        timestamp TIMESTAMPTZ NOT NULL,
+        aqhi DECIMAL(4, 2),
+        last_updated TIMESTAMPTZ DEFAULT NOW(),
 
+        PRIMARY KEY (region_id, timestamp),
+        FOREIGN KEY (region_id) REFERENCES ${REGION_TABLE}(id) ON DELETE CASCADE
+    );
+`
 
+const paTablesQuery = `
+    
     -- PURPLEAIR
     CREATE TABLE IF NOT EXISTS ${SENSOR_TABLE} (
         sensor_index INTEGER PRIMARY KEY,
@@ -96,26 +99,41 @@ const tablesQuery = `
     );
 `
 
+
 export async function createAllTables() {
     try {
-        await pool.query(tablesQuery)
+        await pool.query(paTablesQuery);
+        await pool.query(regionTablesQuery);
     } catch (err) {
-        console.error('Could not create tables: ', err)
+        console.error('Could not create tables: ', err);
+        console.warn('Cronjobs cannot run without tables set up.');
     }
 }
 
 
+// for debugging only
 async function dropAllTables() {
+    // `regions` tables live in the `eccc_aqhi` schema
+    // all other tables live in `public` schema
     const query = `
-    DROP TABLE ${STATION_AQI_TABLE};
-    DROP TABLE ${STATION_MEASUREMENTS};
-    DROP TABLE ${STATION_TABLE};
-
-    DROP TABLE ${SENSOR_READINGS};
-    DROP TABLE ${SENSOR_TABLE};
+        DO $$ 
+        DECLARE 
+            r RECORD;
+        BEGIN
+            FOR r IN (
+                SELECT schemaname, tablename 
+                FROM pg_tables 
+                WHERE schemaname IN ('public', 'eccc_aqhi')
+            ) LOOP
+                EXECUTE 'DROP TABLE IF EXISTS ' 
+                    || quote_ident(r.schemaname) || '.' 
+                    || quote_ident(r.tablename) 
+                    || ' CASCADE';
+            END LOOP;
+        END $$;
     `
     try {
-        await pool.query(query)
+        await pool.query(query);
     } catch (err) {
         console.error('Could not drop tables: ', err)
     }
@@ -123,8 +141,9 @@ async function dropAllTables() {
 
 
 (async () => {
+
     await createAllTables();
     await updatePurpleairMetadata();
-    await updateStationMetadata();
+    await updateRegionMetadata();
 
 })();
