@@ -4,24 +4,25 @@
  * - Remove PurpleAir sensors down for > 6 months
  * 
  * 
- * Note difference between fetching from *group* and fetching from non-group:
- * - group is a user-defined collection of sensors
- *      - makes fetching cheaper and more efficient
- * - non-group: should only be for updating the group
- *      - may contain newly added sensors not currently in group
+ * **PurpleAir Group**: A "cache" that exists on PurpleAir's servers.
+ * - Allocated to each API user
+ * - Identified by a *group ID*
+ * - Purpose: More cost-effective querying of PurpleAir API
  * 
- * See here for how to make API calls w/ PurpleAir:
+ * When to query PA sensors *outside the group*:
+ * - checking for newly-registered sensors
+ * - debugging/testing
+ * 
+ * 
+ * See here for best practices:
  *      https://community.purpleair.com/t/making-api-calls-with-the-purpleair-api/180
  * 
- * 
- * TODO: change from edmonton to alberta
- * - currently using edmonton to keep api costs low during testing
  * 
  */
 
 import PQueue from 'p-queue';               // handles multiple API requests while respecting rate limits
 import { fetch_from_url, validateEnvs } from "../utils"   // utility functions
-import { LOCATION_TYPE_OUTSIDE, ALBERTA_BBOX_COORDINATES, EDMONTON_BBOX_COORDINATES, METADATA_FIELDS } from "./consts"
+import { LOCATION_TYPE_OUTSIDE, ALBERTA_BBOX_COORDINATES, EDMONTON_BBOX_COORDINATES, METADATA_FIELDS, CANADA_BBOX_COORDINATES } from "./consts"
 
 import { _read_data, _write_data } from "../../utils"   // for local testing
 
@@ -57,6 +58,11 @@ export interface MembersMetadataResponse {
     "data": [SensorIndex,SensorName,Latitude,Longitude][]
 }
 
+
+
+
+
+// ----- WITHIN PA GROUP -----
 /**
  * Fetches sensors from our defined group.
  * 
@@ -84,7 +90,18 @@ export async function getCurrentMembers(): Promise<MembersMetadataResponse> {
 }
 
 
-// sensors not within our cached group
+
+// ----- OUTSIDE OF PA GROUP -----
+// This code should only be run
+// if creating a new PurpleAir group
+// or updating the current PurpleAir group.
+
+/**
+ * Sensors fetched are *not limited* to those within our user-defined group.
+ * 
+ * @param params 
+ * @returns 
+ */
 async function getSensors(params: Record<string, any>) {
     const baseUrl = `https://api.purpleair.com/v1/sensors`;
 
@@ -148,40 +165,26 @@ async function addNewMember(sensor_index: number) {
 }
 
 
-// all sensors that reported in the last month
-async function fetchAllSensorsAlberta() {
+/** Fetches sensors within Canada.
+ * 
+ * Removes US sensors and formats the raw PurpleAir response
+ * as a list of sensor objects.
+ * 
+ * @returns Array of sensor objects
+ */
+async function fetchAllSensorsCanada(): Promise<Array<Record<string, any>>> {
     let params: Record<string, any> = {
-        fields: 'last_seen',    // in seconds
+        fields: 'last_seen,latitude,longitude',    // last_seen: in seconds
         max_age: ONE_MONTH,
         location_type: LOCATION_TYPE_OUTSIDE,
-        ...(ALBERTA_BBOX_COORDINATES || {})
+        ...(CANADA_BBOX_COORDINATES || {})
     }
 
-    return await getSensors(params);
-}
+    const sensors_raw = await getSensors(params);
+    const sensors = fieldMapper(sensors_raw.fields, sensors_raw.data);
 
+    return sensors.filter(sensor => !isPointInUS([sensor.longitude, sensor.latitude]));
 
-
-/**
- * Utility function to format API response.
- * Each row becomes an object w/ fields as attributes
- * 
- * Example:
- *      "fields": ["sensor_index", "last_seen"],
-        "data": [  [279217, 1773209892], ...   ]
-    becomes
-        [ { sensor_index: 279217, last_seen: 1773209892 }, ...  ]
- * 
- * @param fields 
- * @param data 
- * @returns 
- */
-const fieldMapper = (fields: string[], data: any[][]): Record<string, any>[] => {
-    return data.map(row => row.reduce((acc, value, index) => {
-        const key = fields[index];  // one of the field names
-        acc[key] = value;
-        return acc;
-    }, {} as Record<string, any>));
 }
 
 
@@ -204,7 +207,7 @@ export interface SensorAddingResponse {
 /**
  * 
  * Steps executed:
- * - fetch ALL sensors within Alberta
+ * - fetch ALL sensors within Canada
  * - fetch current members in group
  * - compare the two
  * - add all sensors that are NOT in group
@@ -213,16 +216,15 @@ export interface SensorAddingResponse {
  * @returns List of newly added sensors. Includes all metadata necessary to update table with.
  */
 export async function addNewMembers(): Promise<SensorAddingResponse[]> {
-    const allRaw = await fetchAllSensorsAlberta();
+    const sensors = await fetchAllSensorsCanada();
     const membersRaw = await getCurrentMembers();
 
 
-    const all = fieldMapper(allRaw.fields, allRaw.data);
     const membersCurrent = fieldMapper(membersRaw.fields, membersRaw.data);
 
     // add new members
     const membersIndexes = membersCurrent.map(m => m.sensor_index);
-    const toAdd = all.filter(s => !membersIndexes.includes(s.sensor_index));
+    const toAdd = sensors.filter(s => !membersIndexes.includes(s.sensor_index));
 
     if (toAdd.length === 0) {
         console.log('No new members to add.')
@@ -261,9 +263,16 @@ export async function addNewMembers(): Promise<SensorAddingResponse[]> {
 }
 
 
-
-// for debugging only
-async function removeMembers(){//(sensor_indexes: number[]) {
+/** For debugging only.
+ * 
+ * Note: "Removed" sensors may still appear in the group.
+ *      This is not an issue - readings are queried from when
+ *      the sensor was last modified/updated (max_age).
+ * 
+ *      Decomissioned sensors can remain in the group without issue.
+ * 
+ */
+async function removeAllMembers() {
     // get current members
     let currentMembers = [];
     const baseUrl = `https://api.purpleair.com/v1/groups/${PA_GROUP_ID}`;
@@ -337,17 +346,129 @@ async function removeMembers(){//(sensor_indexes: number[]) {
 }
 
 
+
+
+// ----- UTILITY FUNCTIONS ----- //
+
+
+
+/**
+ * Checks if a coordinate point is inside a polygon.
+ * @param {Array<number>} point - [longitude, latitude]
+ * @param {Array<Array<number>>} polygon - Array of [longitude, latitude] vertices
+ * @returns {boolean} - true if the point is inside the polygon
+ */
+function isPointInPolygon(point, polygon) {
+    const x = point[0]; // Longitude
+    const y = point[1]; // Latitude
+    
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+        
+        // Ray-casting math check
+        const intersect = ((yi > y) !== (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    
+    return inside;
+}
+
+
+/** Iterates through multiple polygons.
+ * 
+ * Polygons denote where US states are.
+ * The rectangular bounding box containing Canada contains some US states,
+ * which is why this function was created.
+ * 
+ * @param point {Array<number>} point - [longitude, latitude]
+ */
+function isPointInUS(point: Array<number>) {
+    const areas_us_raw = _read_data('./outputs/subtract-bboxes.json');
+    const areas_us: Array<Array<number>> = areas_us_raw.features.map(f => f.geometry.coordinates[0]);
+
+    // none of the points should be in the bounding boxes
+    return areas_us.map(a => isPointInPolygon(point, a)).some(result => result === true);
+}
+
+
+/**
+ * Utility function to format API response.
+ * Each row becomes an object w/ fields as attributes
+ * 
+ * Example:
+ *      "fields": ["sensor_index", "last_seen"],
+        "data": [  [279217, 1773209892], ...   ]
+    becomes
+        [ { sensor_index: 279217, last_seen: 1773209892 }, ...  ]
+ * 
+ * @param fields 
+ * @param data 
+ * @returns 
+ */
+const fieldMapper = (fields: string[], data: any[][]): Record<string, any>[] => {
+    return data.map(row => row.reduce((acc, value, index) => {
+        const key = fields[index];  // one of the field names
+        acc[key] = value;
+        return acc;
+    }, {} as Record<string, any>));
+}
+
+
+
+
+            // 'sensor_index', s.sensor_index,
+            // 'last_seen', r.last_seen,
+            // 'name', s.name,
+            // 'latitude', s.latitude,
+            // 'longitude', s.longitude,
+
+            // 'pm2.5_10minute',   r."pm2.5_10minute",
+            // 'pm2.5_30minute',   r."pm2.5_30minute",
+            // 'pm2.5_60minute',   r."pm2.5_60minute",
+            // 'pm2.5_6hour',      r."pm2.5_6hour",
+            // 'pm2.5_24hour',     r."pm2.5_24hour",
+            // 'humidity',         r.humidity
+
+
+
 // (async () => {
-//     // const allSensorsRaw = _read_data('./outputs/all-sensors.json');
-//     // const allSensors = allSensorsRaw.data.map(row => row[0]);
 
-//     // const currentMembersRaw = _read_data('./outputs/pa-2772-group.json');
-//     // const currentMembers = currentMembersRaw.members.map(row => row.sensor_index);
+//     // await addNewMembers();
 
-//     // console.log(allSensors.filter(idx => !currentMembers.includes(idx)));
+//     // Fetch Canada Sensors
+    
+//     const csensors_metadata_Filename = './outputs/canada-sensors.json'
+//     const demo_data_readings_filename = './outputs/canada-pa-data.json'
 
-//     // const newMembers = await addNewMembers();
-//     // _write_data('./outputs/newMembers.json', newMembers)
+//     const allSensorsCanada = await getCurrentMembers();
+//     _write_data(csensors_metadata_Filename, allSensorsCanada);
 
+//     const csensors = fieldMapper(allSensorsCanada.fields, allSensorsCanada.data).map(s => ({...s, name: "DEMO"}));
+    
+
+//     const demo_readings = _read_data(demo_data_readings_filename);
+//     const readings = fieldMapper(demo_readings.fields, demo_readings.data);
+
+//     const readingsMap = new Map(readings.map(r => [r.sensor_index, r]));
+
+//     const integrated = csensors.map(s => {
+//         let r = readingsMap.get(s.sensor_index);
+
+//         return {
+//             ...s,
+//             ...r
+//         }
+//     });
+
+//     console.log(integrated);
+
+
+//     // const mapped = fieldMapper(allSensorsCanada.fields, allSensorsCanada.data);
+//     // const demo_data = mapped.map(s => ({...s, name: "DEMO"}));
+
+//     _write_data('./outputs/DEMO-DATA.json', integrated);
 // })
-// ();
+// // ();

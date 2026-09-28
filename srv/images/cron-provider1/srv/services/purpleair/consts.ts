@@ -3,6 +3,14 @@ const LOCATION_TYPE_OUTSIDE = 0
 const METADATA_FIELDS="name,latitude,longitude";
 
 
+const CANADA_BBOX_COORDINATES = {
+    nwlat: 83.1139,
+    nwlng: -141.003,
+    selat: 41.6755,
+    selng: -52.6174,
+}
+
+
 const ALBERTA_BBOX_COORDINATES = {
     nwlat: 60,
     nwlng: -120,
@@ -21,6 +29,7 @@ const EDMONTON_BBOX_COORDINATES = {
 export {
     LOCATION_TYPE_OUTSIDE,
     METADATA_FIELDS,
+    CANADA_BBOX_COORDINATES,
     ALBERTA_BBOX_COORDINATES,
     EDMONTON_BBOX_COORDINATES
 }

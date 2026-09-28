@@ -2,7 +2,7 @@ import { URLSearchParams } from "url";
 import { _read_data, _write_data } from "../../utils"
 
 import { fetch_from_url } from "../utils"
-import { LOCATION_TYPE_OUTSIDE, METADATA_FIELDS, ALBERTA_BBOX_COORDINATES, EDMONTON_BBOX_COORDINATES } from "./consts"
+import { LOCATION_TYPE_OUTSIDE, METADATA_FIELDS, ALBERTA_BBOX_COORDINATES, EDMONTON_BBOX_COORDINATES, CANADA_BBOX_COORDINATES } from "./consts"
 
 
 // const PURPLE_AIR_FIELDS="name,last_seen,pm2.5_10minute,pm2.5_30minute,pm2.5_60minute,pm2.5_6hour,pm2.5_24hour,latitude,longitude,humidity";
@@ -49,14 +49,9 @@ export async function get_purpleair_sensor_data(): Promise<PurpleairGroupRespons
 
     const baseUrl = `https://api.purpleair.com/v1/groups/${PA_GROUP_ID}/members`;
 
-    // fetch edmonton only when testing
-    if (ENVIRONMENT === "dev") console.log('Querying sensors from Edmonton only');
-    const bbox = ENVIRONMENT === "dev" ? EDMONTON_BBOX_COORDINATES : ALBERTA_BBOX_COORDINATES;
-
     let params = {
         fields: READING_FIELDS,
         location_type: LOCATION_TYPE_OUTSIDE,  // this group should only have outdoor sensors
-        ...(bbox || {})
     }
 
     // @ts-ignore
