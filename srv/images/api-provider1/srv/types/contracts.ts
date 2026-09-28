@@ -4,6 +4,28 @@
 
 
 
+export type RegionReading = {
+    region_id: string
+    name: string,
+    lat: number,
+    lon: number,
+
+    timestamp: number,
+    aqhi: number | null,
+    backup_aqhi: number | null,
+
+    stations: StationReading[]
+}
+
+// SPECIFIC TO ECCC, NOT AB GOV
+type StationReading = {
+    naps_id: number,
+    name: string,
+    timestamp: number,
+    aqhi: number
+}
+
+
 export type BaseMicrosensor = {
     sensor_index: number
     last_seen: number // unix timestamp
@@ -18,36 +40,4 @@ export type BaseMicrosensor = {
     "pm2.5_6hour": number
     "pm2.5_24hour": number
 };
-
-
-
-// the parameters we want to report for each station
-// see here for full list of allowed parameters:
-// https://data.environment.alberta.ca/EDWServices/aqhi/odata/Parameters?$format=json&$select=Name&$orderby=Name
-export type PollutantKey = "co" | "pm25" | "h2s" | "no2" | "o3" | "so2";
-
-
-// Unified shape for a single station's readings
-export interface StationRecord {
-    station_key?: number;
-    name: string;
-    timestamp: Date;
-
-    raw_timestamp: string;
-
-    lat: number | null;
-    lon: number | null;
-
-    readings: Record<PollutantKey, number | null>;
-    aqhi: number | null;
-    aqi?: number | null;
-
-    manual_aqhi: number | null;
-    aqis: [PollutantKey, number][]
-
-    extraInfo: Record<string, any>
-}
-
-
-
 
