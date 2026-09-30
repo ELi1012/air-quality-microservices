@@ -19,7 +19,6 @@
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.3.1",
     "fast-xml-parser": "^5.7.3",
-    "lodash": "^4.17.23",
     "p-queue": "^9.0.1",
     "pg": "^8.16.3",
     "pg-format": "^1.0.4"
