@@ -35,7 +35,12 @@ import { getGeoMetRegionalMetadata } from "../services/regions/metadataSync"
  */
 export async function updatePurpleairMetadata() {
     const data = await getCurrentMembers();
-    const rows = data.data;
+    let rows = data.data;
+
+    // exclude null lat/lon
+    // sometimes purpleair API returns a "ghost" sensor with
+    // null lat/lon
+    rows.filter(r => r[2] !== null && r[3] !== null);
 
     if (rows.length === 0) {
         console.warn('No members found');
