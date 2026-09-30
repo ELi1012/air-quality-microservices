@@ -40,7 +40,7 @@ export async function updatePurpleairMetadata() {
     // exclude null lat/lon
     // sometimes purpleair API returns a "ghost" sensor with
     // null lat/lon
-    rows.filter(r => r[2] !== null && r[3] !== null);
+    rows = rows.filter(r => r[2] !== null && r[3] !== null);
 
     if (rows.length === 0) {
         console.warn('No members found');
