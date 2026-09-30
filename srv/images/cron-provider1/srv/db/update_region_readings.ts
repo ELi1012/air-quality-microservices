@@ -10,7 +10,7 @@ import { pool } from "./pools";
 import format from "pg-format"
 
 import { RegionReading } from "../types/contracts"
-import { getGeoMetRegionalReadings, getDatamartFile } from "../services/regions/hourlyReadingsSync";
+import { getGeoMetRegionalReadings, getDatamartFile, type DatamartResponse } from "../services/regions/hourlyReadingsSync";
 
 // import {_read_data, _write_data } from "../utils"
 import { REGION_TABLE, REGION_READINGS, STATION_READINGS, DATAMART_AQHI_READINGS } from "./table_names"
@@ -84,21 +84,18 @@ async function insertDatamartReadings(readings: RegionReading[]) {
     const datamartLinkMap = new Map(regionsToCheck.map(r => [r.id, r.datamart_link]));
 
     // populate with retrieved datamart data
-    const regionToDatamartDataMap = new Map(regionsToCheck.map(r => [r.id, null]));
+    const regionToDatamartDataMap: Map<string, DatamartResponse | null> = new Map(regionsToCheck.map(r => [r.id, null]));
 
     // access each datamart link
     for (const geomet_reading of readings) {
         const region_id = geomet_reading.id;
 
         const url = datamartLinkMap.get(region_id);
-        console.log(url);
 
         try {
             const datamart_data = await getDatamartFile(url, false);
             delay(500);
-            // _write_data(`./outputs/datamart/${region_id}.json`, datamart_data);
             
-            // const datamart_data = _read_data(`./outputs/datamart/${region_id}.json`)
             regionToDatamartDataMap.set(region_id, datamart_data);
             
         } catch (err) {
@@ -111,8 +108,9 @@ async function insertDatamartReadings(readings: RegionReading[]) {
 
     // Insert backup AQHI values
 
-    const datamartBackupValues = [...regionToDatamartDataMap.entries()].map(([id, data]) => [id, data.timestamp, data.aqhi]);
-    console.log(datamartBackupValues)
+    const datamartBackupValues = [...regionToDatamartDataMap.entries()]
+        .filter(([id, data]) => data !== null)
+        .map(([id, data]) => [id, data.timestamp, data.aqhi]);
     const backupAqhiQuery = format(
         `INSERT INTO ${DATAMART_AQHI_READINGS} (region_id, timestamp, aqhi)
         VALUES %L
@@ -128,6 +126,7 @@ async function insertDatamartReadings(readings: RegionReading[]) {
     // Insert AQHI per station
     const values = []
     for (const [id, data] of regionToDatamartDataMap.entries()) {
+        if (data === null) continue;
         const stationsList = data.stations.map(s => [id, data.timestamp, s.aqhi || null, s.napsid, s.nameEn]);
         values.push(...stationsList);
     }

@@ -86,7 +86,10 @@ const formatUTCTimestamp = (UTCStamp: string|number) => {
  * @param url_needs_fixing If true, inserts `/aqhi` in path
  * @returns XML data as JSON object
  */
-export async function getDatamartFile(datamart_url: string, url_needs_fixing: boolean) {
+export async function getDatamartFile(
+    datamart_url: string, 
+    url_needs_fixing: boolean
+): Promise<DatamartResponse> {
     // DEBUG ONLY
     // const cgndb_id = "IACMP;"
 
@@ -131,6 +134,19 @@ export async function getDatamartFile(datamart_url: string, url_needs_fixing: bo
     }
 
     return xmlData;
+}
+
+export type DatamartResponse = {
+    name: string,
+    aqhi: number | null,
+    timestamp: Date,
+    rawTimestamp: number,
+    stations: {
+        aqhi: number,
+        napsid: string,
+        nameEn: string,
+        nameFr: string
+    }[]
 }
 
 
