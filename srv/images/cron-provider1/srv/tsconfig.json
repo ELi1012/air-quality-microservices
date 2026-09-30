@@ -10,17 +10,16 @@
     "strict": false,
     "noImplicitAny": false
   },
-  "include": ["./app.js", "**/*.ts"],
+  "include": ["init.js", "**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
     "data",
+    "**/services/stations/*.ts",
     "**/azure/*.ts",
     "**/azure/*.js",
-    "**/crons/",
     "**/logs/",
     "**/outputs/",
     "**/archived/*.ts",
-    "**/purpleair/*.ts"
   ],
 }

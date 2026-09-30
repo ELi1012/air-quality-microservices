@@ -4,6 +4,7 @@
   "description": "Fetches PurpleAir and ECCC data",
   "scripts": {
     "build": "tsc",
+    "init": "node -r dotenv/config dist/init.js",
     "db-setup": "node -r dotenv/config dist/db/db_setup.js",
     "sync-pa": "node -r dotenv/config dist/jobs/sync-purpleair.js",
     "sync-eccc-aqhi": "node -r dotenv/config dist/jobs/sync-regions.js",

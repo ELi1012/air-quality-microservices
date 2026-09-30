@@ -6,7 +6,6 @@
  */
 
 import { pool } from "./pools"
-import { updatePurpleairMetadata, updateRegionMetadata } from "../db/metadata";
 
 
 import {
@@ -112,7 +111,7 @@ export async function createAllTables() {
 
 
 // for debugging only
-async function dropAllTables() {
+export async function dropAllTables() {
     // `regions` tables live in the `eccc_aqhi` schema
     // all other tables live in `public` schema
     const query = `
@@ -139,11 +138,3 @@ async function dropAllTables() {
     }
 }
 
-
-(async () => {
-
-    await createAllTables();
-    await updatePurpleairMetadata();
-    await updateRegionMetadata();
-
-})();
