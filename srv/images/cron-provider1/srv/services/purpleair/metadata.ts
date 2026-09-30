@@ -82,10 +82,9 @@ export async function getCurrentMembers(): Promise<MembersMetadataResponse> {
 
     const headers = { "X-API-KEY": PA_READ_KEY }
     try {
+
         return await fetch_from_url(url, headers) as MembersMetadataResponse;
-        // const thing = await fetch_from_url(url, headers) as MembersMetadataResponse;
-        // _write_data('./outputs/pa-metadata.json', thing);
-        // return thing;
+
     } catch (err) {
         console.error("Could not fetch current members: ", err);
         throw err
@@ -421,59 +420,3 @@ const fieldMapper = (fields: string[], data: any[][]): Record<string, any>[] => 
     }, {} as Record<string, any>));
 }
 
-
-
-
-            // 'sensor_index', s.sensor_index,
-            // 'last_seen', r.last_seen,
-            // 'name', s.name,
-            // 'latitude', s.latitude,
-            // 'longitude', s.longitude,
-
-            // 'pm2.5_10minute',   r."pm2.5_10minute",
-            // 'pm2.5_30minute',   r."pm2.5_30minute",
-            // 'pm2.5_60minute',   r."pm2.5_60minute",
-            // 'pm2.5_6hour',      r."pm2.5_6hour",
-            // 'pm2.5_24hour',     r."pm2.5_24hour",
-            // 'humidity',         r.humidity
-
-
-
-// (async () => {
-
-//     // await addNewMembers();
-
-//     // Fetch Canada Sensors
-    
-//     const csensors_metadata_Filename = './outputs/canada-sensors.json'
-//     const demo_data_readings_filename = './outputs/canada-pa-data.json'
-
-//     const allSensorsCanada = await getCurrentMembers();
-//     _write_data(csensors_metadata_Filename, allSensorsCanada);
-
-//     const csensors = fieldMapper(allSensorsCanada.fields, allSensorsCanada.data).map(s => ({...s, name: "DEMO"}));
-    
-
-//     const demo_readings = _read_data(demo_data_readings_filename);
-//     const readings = fieldMapper(demo_readings.fields, demo_readings.data);
-
-//     const readingsMap = new Map(readings.map(r => [r.sensor_index, r]));
-
-//     const integrated = csensors.map(s => {
-//         let r = readingsMap.get(s.sensor_index);
-
-//         return {
-//             ...s,
-//             ...r
-//         }
-//     });
-
-//     console.log(integrated);
-
-
-//     // const mapped = fieldMapper(allSensorsCanada.fields, allSensorsCanada.data);
-//     // const demo_data = mapped.map(s => ({...s, name: "DEMO"}));
-
-//     _write_data('./outputs/DEMO-DATA.json', integrated);
-// })
-// // ();
