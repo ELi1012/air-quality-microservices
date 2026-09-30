@@ -83,6 +83,9 @@ export async function getCurrentMembers(): Promise<MembersMetadataResponse> {
     const headers = { "X-API-KEY": PA_READ_KEY }
     try {
         return await fetch_from_url(url, headers) as MembersMetadataResponse;
+        // const thing = await fetch_from_url(url, headers) as MembersMetadataResponse;
+        // _write_data('./outputs/pa-metadata.json', thing);
+        // return thing;
     } catch (err) {
         console.error("Could not fetch current members: ", err);
         throw err
@@ -224,7 +227,9 @@ export async function addNewMembers(): Promise<SensorAddingResponse[]> {
 
     // add new members
     const membersIndexes = membersCurrent.map(m => m.sensor_index);
-    const toAdd = sensors.filter(s => !membersIndexes.includes(s.sensor_index));
+    const toAdd = sensors
+        .filter(s => !membersIndexes.includes(s.sensor_index))
+        .filter(s => s.latitude != null && s.longitude !== null);   // prevent downstream errors w/ null constraint violation
 
     if (toAdd.length === 0) {
         console.log('No new members to add.')
