@@ -1,4 +1,4 @@
-# note: run `npm run db-setup` first to initalize tables
+# note: run `npm run init` first to initalize tables
 
 # HOME=~/projects/air_quality/IST VM/srv/images/cron-provider1/
 
@@ -7,14 +7,14 @@
 
 
 # sync purpleair sensor data
-*/30 * * * * cd /srv && /usr/bin/npm run pa-sync > /proc/1/fd/1 2>/proc/1/fd/2
+*/30 * * * * cd /srv && /usr/bin/npm run sync-pa > /proc/1/fd/1 2>/proc/1/fd/2
 
-# sync FEM station data
-20,30,40 * * * * cd /srv && /usr/bin/npm run station-sync > /proc/1/fd/1 2>/proc/1/fd/2
+# sync ECCC regional AQHI data
+20,30,40 * * * * cd /srv && /usr/bin/npm run sync-eccc-aqhi > /proc/1/fd/1 2>/proc/1/fd/2
 
 
 # sync metadata
 
-0 0 1 * * cd /srv && /usr/bin/npm run sync-purpleair-metadata > /proc/1/fd/1 2>/proc/1/fd/2
-5 0 1 * * cd /srv && /usr/bin/npm run sync-station-metadata > /proc/1/fd/1 2>/proc/1/fd/2
+0 0 1 * * cd /srv && /usr/bin/npm run sync-pa-meta > /proc/1/fd/1 2>/proc/1/fd/2
+5 0 1 * * cd /srv && /usr/bin/npm run sync-eccc-region-meta > /proc/1/fd/1 2>/proc/1/fd/2
 
