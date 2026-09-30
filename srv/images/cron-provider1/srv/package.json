@@ -1,30 +1,23 @@
 {
   "name": "cron-provider1",
   "version": "1.0.0",
-  "description": "Fetches PurpleAir data",
-  "main": "app.js",
+  "description": "Fetches PurpleAir and ECCC data",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/app.js",
-    "dev": "node -r ts-node/register app.js",
     "db-setup": "node -r dotenv/config dist/db/db_setup.js",
-    "station-sync": "node -r dotenv/config dist/jobs/sync-stations.js",
-    "pa-sync": "node -r dotenv/config dist/jobs/sync-purpleair.js",
-    "sync-station-metadata": "node -r dotenv/config dist/jobs/sync-metadata-stations.js",
-    "sync-purpleair-metadata": "node -r dotenv/config dist/jobs/sync-metadata-purpleair.js",
-    
+    "sync-pa": "node -r dotenv/config dist/jobs/sync-purpleair.js",
+    "sync-eccc-aqhi": "node -r dotenv/config dist/jobs/sync-regions.js",
+    "sync-pa-meta": "node -r dotenv/config dist/jobs/sync-metadata-purpleair.js",
+    "sync-eccc-region-meta": "node -r dotenv/config dist/jobs/sync-metadata-regions.js",
     "dev:db-setup": "npx tsx -r dotenv/config ./db/db_setup.ts",
-    "dev:station-sync": "npx tsx -r dotenv/config ./jobs/sync-stations.ts",
-    "dev:pa-sync": "npx tsx -r dotenv/config ./jobs/sync-purpleair.ts",
-    "dev:sync-station-metadata": "npx tsx -r dotenv/config ./jobs/sync-metadata-stations.ts",
-    "dev:sync-purpleair-metadata": "npx tsx -r dotenv/config ./jobs/sync-metadata-purpleair.ts"
-    
-
+    "dev:sync-pa": "npx tsx -r dotenv/config ./jobs/sync-purpleair.ts",
+    "dev:sync-regions": "npx tsx -r dotenv/config ./jobs/sync-regions.ts"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.3.1",
+    "fast-xml-parser": "^5.7.3",
     "lodash": "^4.17.23",
     "p-queue": "^9.0.1",
     "pg": "^8.16.3",
